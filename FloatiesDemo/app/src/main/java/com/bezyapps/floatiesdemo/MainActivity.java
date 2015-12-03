@@ -35,14 +35,24 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, MainActivity.class);
         PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         Notification notification = Floaty.createNotification(this, "Floaty Demo", "Service Running", R.drawable.float_icon, resultPendingIntent);
+
+        // Inflate the Views that are to be used as HEAD and BODY of The Window
         View head = LayoutInflater.from(this).inflate(R.layout.float_head, null);
+        // You should not add click listeners to head as it will be overridden, but the purpose of not making head just
+        // an ImageView is so you can add multiple views in it, and show and hide the relevant views to notify user etc.
         View body = LayoutInflater.from(this).inflate(R.layout.float_body, null);
-        ArrayList<String> strings = new ArrayList<>();
-        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, strings);
+
+        // Access child views of body
         final ListView listView = (ListView) body.findViewById(R.id.listViewTasks);
-        listView.setAdapter(arrayAdapter);
         final EditText editText = (EditText) body.findViewById(R.id.editText_task);
         Button button = (Button) body.findViewById(R.id.button_save);
+
+        ArrayList<String> strings = new ArrayList<>();
+        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, strings);
+
+        listView.setAdapter(arrayAdapter);
+
+        // Get the instance of the Floaty
         floaty = Floaty.createInstance(this, head, body, NOTIFICATION_ID, notification, new FloatyOrientationListener() {
             @Override
             public void beforeOrientationChange(Floaty floaty) {
@@ -55,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // Set your domain specific logic to body's children
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -75,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
+
 
         button_start.setOnClickListener(new View.OnClickListener() {
             @Override
