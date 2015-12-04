@@ -1,10 +1,22 @@
 package com.bezyapps.floatiesdemo;
 
+import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.PendingIntent;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
+import android.provider.Settings;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Html;
+import android.text.Spanned;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
@@ -25,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     Floaty floaty;
     Button button_start, button_stop;
     private static final int NOTIFICATION_ID = 1500;
+    public static final int PERMISSION_REQUEST_CODE = 16;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+
         // Set your domain specific logic to body's children
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -91,7 +105,11 @@ public class MainActivity extends AppCompatActivity {
         button_start.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                floaty.startService();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    startFloatyForAboveAndroidL();
+                } else {
+                    floaty.startService();
+                }
             }
         });
 
@@ -101,5 +119,31 @@ public class MainActivity extends AppCompatActivity {
                 floaty.stopService();
             }
         });
+    }
+
+
+    @TargetApi(Build.VERSION_CODES.M)
+    public void startFloatyForAboveAndroidL() {
+        if (!Settings.canDrawOverlays(this)) {
+            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:" + getPackageName()));
+            startActivityForResult(intent, PERMISSION_REQUEST_CODE);
+        } else {
+            floaty.startService();
+        }
+    }
+
+
+    @TargetApi(Build.VERSION_CODES.M)
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (Settings.canDrawOverlays(this)) {
+                floaty.startService();
+            } else {
+                Spanned message = Html.fromHtml("Please allow this permission, so <b>Floaties</b> could be drawn.");
+                Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+            }
+        }
     }
 }
