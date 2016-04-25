@@ -10,8 +10,8 @@ import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.support.v4.view.GestureDetectorCompat;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.view.GestureDetectorCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -23,21 +23,20 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
 
+
 /**
- *
  * Created by ericbhatti on 11/24/15.
  *
  * @author Eric Bhatti
  * @since 24 November, 2015
- *
  */
 public class Floaty {
 
     private final View head;
     private final View body;
     private final Context context;
-    private final Notification notification;
-    private final int notificationId;
+    private Notification notification = null;
+    private int notificationId = -1;
     private static Floaty floaty;
     private final FloatyOrientationListener floatyOrientationListener;
     private float ratioY = 0;
@@ -49,7 +48,6 @@ public class Floaty {
 
 
     /**
-     *
      * @return The body of the floaty which is assigned through the {@link #createInstance} method.
      */
 
@@ -59,7 +57,6 @@ public class Floaty {
 
 
     /**
-     *
      * @return The head of the floaty which is assigned through the {@link #createInstance} method.
      */
 
@@ -68,17 +65,15 @@ public class Floaty {
     }
 
     /**
-     *
      * Creates a Singleton of the Floating Window
      *
-     * @param context The application context
-     * @param head The head View, upon clicking it the body is to be opened
-     * @param body The body View
-     * @param notificationId The notificationId for your notification
-     * @param notification The notification which is displayed for the foreground service
+     * @param context                   The application context
+     * @param head                      The head View, upon clicking it the body is to be opened
+     * @param body                      The body View
+     * @param notificationId            The notificationId for your notification
+     * @param notification              The notification which is displayed for the foreground service
      * @param floatyOrientationListener The {@link FloatyOrientationListener} interface with callbacks which are called when orientation changes.
      * @return A Floating Window
-     *
      */
 
     public static synchronized Floaty createInstance(Context context, View head, View body, int notificationId, Notification notification, FloatyOrientationListener
@@ -90,20 +85,36 @@ public class Floaty {
     }
 
     /**
-     *
      * Creates a Singleton of the Floating Window
      *
-     * @param context The application context
-     * @param head The head View, upon clicking it the body is to be opened
-     * @param body The body View
+     * @param context        The application context
+     * @param head           The head View, upon clicking it the body is to be opened
+     * @param body           The body View
      * @param notificationId The notificationId for your notification
-     * @param notification The notification which is displayed for the foreground service
+     * @param notification   The notification which is displayed for the foreground service
      * @return A Floating Window
-     *
      */
     public static synchronized Floaty createInstance(Context context, View head, View body, int notificationId, Notification notification) {
         if (floaty == null) {
             floaty = new Floaty(context, head, body, notificationId, notification, new FloatyOrientationListener() {
+                @Override
+                public void beforeOrientationChange(Floaty floaty) {
+                    Log.d(LOG_TAG, "beforeOrientationChange");
+                }
+
+                @Override
+                public void afterOrientationChange(Floaty floaty) {
+                    Log.d(LOG_TAG, "afterOrientationChange");
+                }
+            });
+        }
+        return floaty;
+    }
+
+
+    public static synchronized Floaty createInstance(Context context, View head, View body) {
+        if (floaty == null) {
+            floaty = new Floaty(context, head, body, new FloatyOrientationListener() {
                 @Override
                 public void beforeOrientationChange(Floaty floaty) {
                     Log.d(LOG_TAG, "beforeOrientationChange");
@@ -137,6 +148,13 @@ public class Floaty {
         this.floatyOrientationListener = floatyOrientationListener;
     }
 
+    private Floaty(Context context, View head, View body, FloatyOrientationListener floatyOrientationListener) {
+        this.head = head;
+        this.body = body;
+        this.context = context;
+        this.floatyOrientationListener = floatyOrientationListener;
+    }
+
 
     /**
      * Starts the service and adds it to the screen
@@ -156,7 +174,6 @@ public class Floaty {
 
 
     /**
-     *
      * Helper method for notification creation.
      *
      * @param context
@@ -218,7 +235,9 @@ public class Floaty {
             Log.d(LOG_TAG, "onStartCommand");
             metrics = new DisplayMetrics();
             windowManager.getDefaultDisplay().getMetrics(metrics);
-            startForeground(floaty.notificationId, floaty.notification);
+            if (floaty.notification != null) {
+                startForeground(floaty.notificationId, floaty.notification);
+            }
             return START_STICKY;
         }
 
@@ -385,7 +404,9 @@ public class Floaty {
                 mLinearLayout.removeAllViews();
                 windowManager.removeView(mLinearLayout);
             }
-            stopForeground(true);
+            if (floaty.notification != null) {
+                stopForeground(true);
+            }
         }
     }
 }
